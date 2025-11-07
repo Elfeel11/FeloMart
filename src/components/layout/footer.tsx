@@ -72,10 +72,10 @@ export function Footer() {
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-lg">
-                  T
+                  F
                 </span>
               </div>
-              <span className="font-bold text-xl">TechMart</span>
+              <span className="font-bold text-xl">FeloMart</span>
             </Link>
             <p className="text-muted-foreground mb-4 max-w-md">
               Your one-stop destination for the latest technology, fashion, and

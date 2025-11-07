@@ -8,7 +8,7 @@ export default function Home() {
     <div className="container mx-auto px-4 py-40">
       <div className="text-center space-y-6">
         <h1 className="text-4xl font-bold tracking-tight lg:text-6xl">
-          Welcome to TechMart
+          Welcome to FeloMart
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Discover the latest technology, fashion, and lifestyle products.

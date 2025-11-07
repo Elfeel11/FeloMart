@@ -1,17 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Product } from "@/interfaces";
 import { ProductCard } from "@/components/products/ProductCard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, Grid, List } from "lucide-react";
+import { ProductsResponse } from "@/types";
+import { Product } from "@/interfaces";
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<(Product[])>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+
+   async function fetchProducts() {
+    setLoading(true);
+    const data:ProductsResponse = await fetch("https://ecommerce.routemisr.com/api/v1/products"
+
+    ).then((res) => res.json());
+    setLoading(false);
+setProducts(data.data);
+
+  }
+
+  useEffect(() => {
+    fetchProducts(); 
+  }
+, []);
+
 
   if (loading && products.length === 0) {
     return (
@@ -34,6 +52,7 @@ export default function ProductsPage() {
     );
   }
 
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -44,9 +63,8 @@ export default function ProductsPage() {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 mb-8">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center border rounded-md">
+      <div className="flex items-center justify-end mb-6">
+        <div className="flex items-center border rounded-md">
             <Button
               variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
@@ -64,9 +82,8 @@ export default function ProductsPage() {
               <List className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      </div>
 
+      </div>
       {/* Products Grid */}
       {loading ? (
         <div className="flex justify-center items-center min-h-[200px]">
@@ -81,7 +98,7 @@ export default function ProductsPage() {
           }`}
         >
           {products.map((product) => (
-            <ProductCard product={product} viewMode={viewMode} />
+            <ProductCard key={product._id} product={product} viewMode={viewMode} />
           ))}
         </div>
       )}

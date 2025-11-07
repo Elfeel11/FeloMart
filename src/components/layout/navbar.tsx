@@ -30,11 +30,12 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">
-                T
+                 <span className="text-primary-foreground font-bold text-lg">
+                F
               </span>
+
             </div>
-            <span className="font-bold text-xl">TechMart</span>
+            <span className="font-bold text-xl">FeloMart</span>
           </Link>
 
           {/* Desktop Navigation */}
