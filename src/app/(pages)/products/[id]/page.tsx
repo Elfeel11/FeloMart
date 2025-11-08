@@ -9,14 +9,35 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ShoppingCart, Heart, Truck, Shield, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { renderStars } from "@/helpers/rating";
+import {  SingleProductResponse } from "@/types";
+import { formatPrice } from "@/helpers/currency";
 
 export default function ProductDetailPage() {
-  const { productId } = useParams();
+  const { id } = useParams();
 
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(-1);
+
+
+  async function fetchProductDetails() {
+    setLoading(true);
+    const data:SingleProductResponse =
+     await fetch("https://ecommerce.routemisr.com/api/v1/products/" + id
+      
+     ).then(res => res.json());
+  
+    setLoading(false);
+    setProduct(data.data);
+    
+  }
+
+  useEffect(() => {
+    fetchProductDetails();
+  }, []);
+
+
 
   if (loading) {
     return (
@@ -39,12 +60,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
+  
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -54,8 +70,8 @@ export default function ProductDetailPage() {
           {/* Main Image */}
           <div className="relative aspect-square overflow-hidden rounded-lg border">
             <Image
-              src={""}
-              alt={""}
+              src={product.images[selectedImage] ?? product.imageCover}
+              alt={product.title}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -63,7 +79,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Thumbnail Images */}
-          {/* {product.images.length > 1 && (
+          {product.images.length > 1 && (
             <div className="flex gap-2 overflow-x-auto">
               {product.images.map((image, index) => (
                 <button
@@ -85,7 +101,7 @@ export default function ProductDetailPage() {
                 </button>
               ))}
             </div>
-          )} */}
+          )}
         </div>
 
         {/* Product Info */}
@@ -96,34 +112,34 @@ export default function ProductDetailPage() {
               href={``}
               className="hover:text-primary hover:underline transition-colors"
             >
-              {"Brand"}
+              {product.brand.name}
             </Link>
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold">{"productTitle"}</h1>
+          <h1 className="text-3xl font-bold">{product.title}</h1>
 
           {/* Rating */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               {renderStars(5)}
               <span className="ml-2 text-sm text-muted-foreground">
-                {"4.5"} ({"1000"} reviews)
+                {product.ratingsAverage} ({product.ratingsQuantity} reviews)
               </span>
             </div>
-            <span className="text-sm text-muted-foreground">{"1500"} sold</span>
+            <span className="text-sm text-muted-foreground">{product.sold} sold</span>
           </div>
 
           {/* Price */}
           <div className="text-3xl font-bold text-primary">
-            {formatPrice(1500)}
+            {formatPrice(product.price)}
           </div>
 
           {/* Description */}
           <div className="space-y-2">
             <h3 className="font-semibold">Description</h3>
             <p className="text-muted-foreground leading-relaxed">
-              {"product description"}
+              {product.description}
             </p>
           </div>
 
@@ -133,16 +149,16 @@ export default function ProductDetailPage() {
               href={``}
               className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm hover:bg-secondary/80 transition-colors"
             >
-              {"categoryName"}
+              {product.category.name}
             </Link>
-            {/* {product.subcategory.map((sub) => (
+            {product.subcategory.map((sub) => (
               <span
                 key={sub._id}
                 className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
               >
                 {sub.name}
               </span>
-            ))} */}
+            ))}
           </div>
 
           {/* Stock Status */}
@@ -150,11 +166,11 @@ export default function ProductDetailPage() {
             <span className="text-sm font-medium">Stock:</span>
             <span
               className={`text-sm ${
-                15 > 0 ? "text-green-600" : "text-red-600"
+                product.quantity > 0 ? "text-green-600" : "text-red-600"
               }`}
             >
-              {15 > 0
-                ? `${15} available`
+              {product.quantity > 0
+                ? `${product.quantity} available`
                 : "Out of stock"}
             </span>
           </div>
