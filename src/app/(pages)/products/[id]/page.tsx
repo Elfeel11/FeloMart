@@ -6,11 +6,13 @@ import { useParams } from "next/navigation";
 import { Product } from "@/interfaces";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { ShoppingCart, Heart, Truck, Shield, RotateCcw } from "lucide-react";
+import { ShoppingCart, Heart, Truck, Shield, RotateCcw, Loader, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { renderStars } from "@/helpers/rating";
 import {  SingleProductResponse } from "@/types";
 import { formatPrice } from "@/helpers/currency";
+import { apiServices } from "@/services/api";
+import toast from "react-hot-toast";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -19,14 +21,13 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(-1);
+  const [addToCartLoading, setaddToCartLoading] = useState(false)
 
 
   async function fetchProductDetails() {
     setLoading(true);
     const data:SingleProductResponse =
-     await fetch("https://ecommerce.routemisr.com/api/v1/products/" + id
-      
-     ).then(res => res.json());
+    await apiServices.getProductDetails(String(id));
   
     setLoading(false);
     setProduct(data.data);
@@ -37,6 +38,18 @@ export default function ProductDetailPage() {
     fetchProductDetails();
   }, []);
 
+
+  async function HandleAddProductToCart(){
+  setaddToCartLoading(true);
+    const data = await apiServices.addProductToCart(product!._id);
+    if(data.status != "success"){
+      toast.error("Error. Please try again.")
+    }else{
+      toast.success(data.message)
+    }
+    
+  setaddToCartLoading(false);
+ }
 
 
   if (loading) {
@@ -59,7 +72,7 @@ export default function ProductDetailPage() {
       </div>
     );
   }
-
+ 
   
 
   return (
@@ -180,8 +193,10 @@ export default function ProductDetailPage() {
             <Button
               size="lg"
               className="flex-1"
-              // disabled={15 === 0}
+              disabled={product.quantity === 0 || addToCartLoading}
+              onClick={HandleAddProductToCart}
             >
+              {addToCartLoading && <Loader2 className="animate-spin " />}
               <ShoppingCart className="h-5 w-5 mr-2" />
               Add to Cart
             </Button>

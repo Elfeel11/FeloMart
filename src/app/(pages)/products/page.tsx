@@ -7,29 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Search, Filter, Grid, List } from "lucide-react";
 import { ProductsResponse } from "@/types";
 import { Product } from "@/interfaces";
+import { apiServices } from "@/services/api";
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<(Product[])>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-
-   async function fetchProducts() {
+  async function fetchProducts() {
     setLoading(true);
-    const data:ProductsResponse = await fetch("https://ecommerce.routemisr.com/api/v1/products"
-
-    ).then((res) => res.json());
+    const data: ProductsResponse = await apiServices.getAllProducts();
     setLoading(false);
-setProducts(data.data);
-
+    setProducts(data.data);
   }
 
   useEffect(() => {
-    fetchProducts(); 
-  }
-, []);
-
+    fetchProducts();
+  }, []);
 
   if (loading && products.length === 0) {
     return (
@@ -52,7 +47,6 @@ setProducts(data.data);
     );
   }
 
-
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -65,24 +59,23 @@ setProducts(data.data);
 
       <div className="flex items-center justify-end mb-6">
         <div className="flex items-center border rounded-md">
-            <Button
-              variant={viewMode === "grid" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("grid")}
-              className="rounded-r-none"
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className="rounded-l-none"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-
+          <Button
+            variant={viewMode === "grid" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("grid")}
+            className="rounded-r-none"
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            className="rounded-l-none"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       {/* Products Grid */}
       {loading ? (
@@ -98,7 +91,11 @@ setProducts(data.data);
           }`}
         >
           {products.map((product) => (
-            <ProductCard key={product._id} product={product} viewMode={viewMode} />
+            <ProductCard
+              key={product._id}
+              product={product}
+              viewMode={viewMode}
+            />
           ))}
         </div>
       )}
