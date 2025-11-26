@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { ProductCard } from "@/components/products/ProductCard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Button } from "@/components/ui/button";
