@@ -56,6 +56,12 @@ return await fetch(
       }).then((res) => res.json());
 }
 
+async removeCartProduct(productId: string): Promise<any>{
+  return await fetch(this.#baseUrl + "api/v1/cart/" + productId , {
+    method: "delete",
+    headers: this.#getHeaders()
+  }).then((res) => res.json());
+}
 
 
 

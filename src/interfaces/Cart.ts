@@ -14,10 +14,10 @@ export interface GetUserCartResponse {
   message: string;
   numOfCartItems: number;
   cartId: string;
-  data: CartResponseData<Product>;
+  data: CartResponseData<InnerCartProduct>;
 }
 
-interface CartResponseData<T> {
+export interface CartResponseData<T> {
   _id: string;
   cartOwner: string;
   products: CartProduct<T>[];
@@ -26,14 +26,14 @@ interface CartResponseData<T> {
   totalCartPrice: number;
 }
 
-interface CartProduct<T> {
+export interface CartProduct<T> {
   count: number;
   _id: string;
   product: T;
   price: number;
 }
 
-interface Product {
+export interface InnerCartProduct {
   subcategory: Subcategory[];
   _id: string;
   title: string;
