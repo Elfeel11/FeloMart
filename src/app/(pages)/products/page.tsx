@@ -8,6 +8,7 @@ import { Search, Filter, Grid, List } from "lucide-react";
 import { ProductsResponse } from "@/types";
 import { Product } from "@/interfaces";
 import { apiServices } from "@/services/api";
+import Link from "next/link";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -41,7 +42,12 @@ export default function ProductsPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
-          <Button>Try Again</Button>
+          <Button>
+             <Link href="/products">
+             Try Again
+             </Link> 
+             
+            </Button>
         </div>
       </div>
     );

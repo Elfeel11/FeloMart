@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Product } from "@/interfaces";
@@ -13,6 +13,9 @@ import {  SingleProductResponse } from "@/types";
 import { formatPrice } from "@/helpers/currency";
 import { apiServices } from "@/services/api";
 import toast from "react-hot-toast";
+import AddToCartButton from "@/components/products/AddProductButton";
+import { cartContext } from "@/contextes/CartContext";
+
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -22,6 +25,8 @@ export default function ProductDetailPage() {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(-1);
   const [addToCartLoading, setaddToCartLoading] = useState(false)
+    const {HandleAddProductToCart } = useContext(cartContext)
+  
 
 
   async function fetchProductDetails() {
@@ -39,17 +44,7 @@ export default function ProductDetailPage() {
   }, []);
 
 
-  async function HandleAddProductToCart(){
-  setaddToCartLoading(true);
-    const data = await apiServices.addProductToCart(product!._id);
-    if(data.status != "success"){
-      toast.error("Error. Please try again.")
-    }else{
-      toast.success(data.message)
-    }
-    
-  setaddToCartLoading(false);
- }
+ 
 
 
   if (loading) {
@@ -190,16 +185,7 @@ export default function ProductDetailPage() {
 
           {/* Action Buttons */}
           <div className="flex gap-4">
-            <Button
-              size="lg"
-              className="flex-1"
-              disabled={product.quantity === 0 || addToCartLoading}
-              onClick={HandleAddProductToCart}
-            >
-              {addToCartLoading && <Loader2 className="animate-spin " />}
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              Add to Cart
-            </Button>
+            <AddToCartButton  HandleAddProductToCart={() => HandleAddProductToCart!(product._id, setaddToCartLoading) } addToCartLoading={addToCartLoading} productQuantity={product.quantity}  />
             <Button variant="outline" size="lg">
               <Heart className="h-5 w-5" />
             </Button>

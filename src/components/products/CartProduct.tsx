@@ -4,24 +4,32 @@ import {  Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "../ui";
 import { CartProduct as CartProductI, InnerCartProduct } from "@/interfaces";
-import { Product } from "@/interfaces";
 import Link from "next/link";
-import { apiServices } from "@/services/api";
-import toast from "react-hot-toast";
-import { it } from "node:test";
+
 
 interface cartproductProps {
   item: CartProductI<InnerCartProduct>;
   handlrRemoveCartItem: ( ProductId: string, setIsRemovingProduct: (Value: boolean) => void ) => void;
+  updateCartProductQuantity : ( productId: string , count: number ) => Promise<void>;
 }
 
-export default function CartProduct({ item, handlrRemoveCartItem}: cartproductProps) {
+export default function CartProduct({ item, handlrRemoveCartItem, updateCartProductQuantity }: cartproductProps) {
     const [IsRemovingProduct, setIsRemovingProduct] = useState(false)
+    const [ProductCount, setProductCount] = useState(item.count)  
+    const [TimeOut, setTimeOut] = useState<NodeJS.Timeout>()  
 
 
-  
 
+  async function handleProductCount(count: number){
+    setProductCount(count);
 
+  clearTimeout(TimeOut);
+
+   const id = setTimeout(() => {
+      updateCartProductQuantity( item.product._id , count)
+    }, 500);
+   setTimeOut(id);
+  }
 
   return (
     <div
@@ -71,25 +79,25 @@ export default function CartProduct({ item, handlrRemoveCartItem}: cartproductPr
 
         <div className="flex items-center rounded-lg px-3 py-2">
           <Button
-            // onClick={() => onUpdateQty(product.product._id, product.count - 1)}
+            onClick={() => handleProductCount(ProductCount - 1)}
             className="  "
             size="sm"
-            // disabled={item.count <= 1}
+            disabled={item.count <= 1}
             variant="secondary"
           >
-            <Minus className="w-4 h-4" />
+            <Minus className="w-4 h-4" />            
           </Button>
 
-          <span className="mx-2 font-semibold">{item.count}</span>
+          <span className="mx-2 font-semibold">{ProductCount}</span>
 
           <Button
-            // onClick={() => onUpdateQty(item.product._id, item.count + 1)}
+            onClick={() => handleProductCount(ProductCount + 1)}
             className="p-1"
             size="sm"
             variant="secondary"
             disabled={item.count >= item.product.quantity}
           >
-            <Plus className="w-4 h-4" />
+           <Plus className="w-4 h-4" />
           </Button>
         </div>
       </div>

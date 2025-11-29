@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Star, ShoppingCart, Heart } from "lucide-react";
 import { renderStars } from "@/helpers/rating";
 import { formatPrice } from "@/helpers/currency";
+import { useContext, useState } from "react";
+import { apiServices } from "@/services/api";
+import toast from "react-hot-toast";
+import AddToCartButton from "./AddProductButton";
+import { cartContext } from "@/contextes/CartContext";
 
 interface ProductCardProps {
   product: Product;
@@ -14,6 +19,12 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
+  const [addToCartLoading, setaddToCartLoading] = useState(false)
+  const { HandleAddProductToCart } = useContext(cartContext)
+
+ 
+
+
   if (viewMode === "list") {
     return (
       <div className="flex gap-4 p-4 border rounded-lg hover:shadow-md transition-shadow">
@@ -177,11 +188,8 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
 
 
       {/* Add to Cart Button */}
-      <div className="p-4">
-        <Button className="w-full" size="sm">
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          Add to Cart
-        </Button>
+      <div className="p-4 ">
+        <AddToCartButton HandleAddProductToCart={() => HandleAddProductToCart!(product._id, setaddToCartLoading )} addToCartLoading={addToCartLoading} productQuantity={product.quantity}  />
       </div>
     </div>
   );

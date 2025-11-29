@@ -9,9 +9,8 @@ export default async function Cart() {
     return response;
   }
 
-  const cart = (await fetchCart()).data;
+  const cart = (await fetchCart());
 
-  cart.products[0].product.title;
 
   return (
     <div className="container mx-auto px-4 py-10">

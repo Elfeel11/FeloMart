@@ -56,7 +56,7 @@ return await fetch(
       }).then((res) => res.json());
 }
 
-async removeCartProduct(productId: string): Promise<any>{
+async removeCartProduct(productId: string): Promise<{status: string}>{
   return await fetch(this.#baseUrl + "api/v1/cart/" + productId , {
     method: "delete",
     headers: this.#getHeaders()
@@ -64,6 +64,22 @@ async removeCartProduct(productId: string): Promise<any>{
 }
 
 
+async clearCart(): Promise<{status: string}> {
+  return await fetch(this.#baseUrl + "api/v1/cart/" , {
+    method: "delete",
+    headers: this.#getHeaders()
+  }).then((res) => res.json());
+}
+
+
+async updateCartProductQuantity(productId: string, count: number): Promise<{status: string}> {
+  return await fetch(this.#baseUrl + "api/v1/cart/" + productId , {
+    method : "PUT",
+    headers: this.#getHeaders(),
+    body: JSON.stringify({ count })
+    }).then((res) => res.json());
+
+  }
 
 }
 
