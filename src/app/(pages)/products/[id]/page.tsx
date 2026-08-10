@@ -118,8 +118,7 @@ export default function ProductDetailPage() {
           <div className="text-sm text-muted-foreground uppercase tracking-wide">
             <Link
               href={``}
-              className="hover:text-primary hover:underline transition-colors"
-            >
+              className="hover:text-primary hover:underline transition-colors">
               {product.brand.name}
             </Link>
           </div>
@@ -187,7 +186,7 @@ export default function ProductDetailPage() {
           <div className="flex gap-4">
             <AddToCartButton  HandleAddProductToCart={() => HandleAddProductToCart!(product._id, setaddToCartLoading) } addToCartLoading={addToCartLoading} productQuantity={product.quantity}  />
             <Button variant="outline" size="lg">
-              <Heart className="h-5 w-5" />
+              <Heart className="h-5 w-5" />  
             </Button>
           </div>
 
