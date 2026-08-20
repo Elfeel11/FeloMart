@@ -27,7 +27,7 @@ class ApiServices {
   #getHeaders() {
     return {
       "Content-Type": "application/json",
-      token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YWE2YWM3ZmE3ODk1ZTgxZjY3YjRlNCIsIm5hbWUiOiJBaG1lZCBBYmQgQWwtTXV0aSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzM5NzIyOTU2LCJleHAiOjE3NDc0OTg5NTZ9.8gCtCXvX73cV79YPex9Bup3dlfzpLextZYxfk4RFKIo`,
+      token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhODc4YzY2ZmMzM2Q4MDAxMjQ2YmNiZiIsIm5hbWUiOiJBaG1lZCBBYmQgQWwtTXV0aSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzg3MjY4MjE4LCJleHAiOjE3OTUwNDQyMTh9.Fqzy3nno3tpGWKAySB5LmQ8WgdXfLTNma2xhDH0Vq64`,
       // token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTA4ZmZjNTE0MThhZjVhOGNiMjYxNyIsIm5hbWUiOiJBaG1lZCBBYmQgQWwtTXV0aSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzYzMDc5NTUzLCJleHAiOjE3NzA4NTU1NTN9.SsM0OForvTZyaW33dc4gCx1U1jxftmgui7g6SfhEG5M`,
     };
   }

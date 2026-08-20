@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-// import "./globals.css";
+import "./globals.css";
 import { Navbar, Footer } from "@/components";
 import { Toaster } from "react-hot-toast";
 import ProvidersContainer from "./../components/providersContainer/ProvidersContainer";
