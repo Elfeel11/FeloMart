@@ -6,3 +6,4 @@ export * from './brand';
 export * from './category';
 export * from './product';
 export * from './Cart';
+export * from './auth';

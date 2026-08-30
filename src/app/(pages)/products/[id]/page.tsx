@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Product } from "@/interfaces";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -14,19 +14,64 @@ import { formatPrice } from "@/helpers/currency";
 import { apiServices } from "@/services/api";
 import toast from "react-hot-toast";
 import AddToCartButton from "@/components/products/AddProductButton";
-import { cartContext } from "@/contextes/CartContext";
+import { useSession } from "next-auth/react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { addToCart } from "@/redux/slices/cartSlice";
+import { addToWishlist, removeFromWishlist } from "@/redux/slices/wishlistSlice";
+import { cn } from "@/lib/utils";
 
 
 export default function ProductDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
+  const { data: session } = useSession();
+  const dispatch = useAppDispatch();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(-1);
   const [addToCartLoading, setaddToCartLoading] = useState(false)
-    const {HandleAddProductToCart } = useContext(cartContext)
-  
+
+  const isInWishlist = useAppSelector((state) =>
+    product ? state.wishlist.productIds.includes(product._id) : false
+  );
+  const isWishlistMutating = useAppSelector((state) =>
+    product ? state.wishlist.mutatingIds.includes(product._id) : false
+  );
+
+  async function HandleAddProductToCart(productId: string, setLoading: (v: boolean) => void) {
+    if (!session?.token) {
+      toast.error("Please sign in to add items to your cart", { position: "bottom-right" });
+      router.push("/login");
+      return;
+    }
+
+    setLoading(true);
+    const result = await dispatch(addToCart({ productId, token: session.token }));
+    setLoading(false);
+
+    if (addToCart.fulfilled.match(result) && result.payload.status === "success") {
+      toast.success(result.payload.message, { position: "bottom-right" });
+    } else {
+      toast.error("Error. Please try again.", { position: "bottom-right" });
+    }
+  }
+
+  function handleToggleWishlist() {
+    if (!product) return;
+    if (!session?.token) {
+      toast.error("Please sign in to use your wishlist", { position: "bottom-right" });
+      router.push("/login");
+      return;
+    }
+
+    if (isInWishlist) {
+      dispatch(removeFromWishlist({ productId: product._id, token: session.token }));
+    } else {
+      dispatch(addToWishlist({ productId: product._id, token: session.token }));
+    }
+  }
 
 
   async function fetchProductDetails() {
@@ -184,9 +229,13 @@ export default function ProductDetailPage() {
 
           {/* Action Buttons */}
           <div className="flex gap-4">
-            <AddToCartButton  HandleAddProductToCart={() => HandleAddProductToCart!(product._id, setaddToCartLoading) } addToCartLoading={addToCartLoading} productQuantity={product.quantity}  />
-            <Button variant="outline" size="lg">
-              <Heart className="h-5 w-5" />  
+            <AddToCartButton  HandleAddProductToCart={() => HandleAddProductToCart(product._id, setaddToCartLoading) } addToCartLoading={addToCartLoading} productQuantity={product.quantity}  />
+            <Button variant="outline" size="lg" onClick={handleToggleWishlist} disabled={isWishlistMutating}>
+              {isWishlistMutating ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Heart className={cn("h-5 w-5", isInWishlist && "fill-red-500 text-red-500")} />
+              )}
             </Button>
           </div>
 

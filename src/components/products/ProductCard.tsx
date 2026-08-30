@@ -4,14 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/interfaces";
 import { Button } from "@/components/ui/button";
-import { Star, ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Loader2 } from "lucide-react";
 import { renderStars } from "@/helpers/rating";
 import { formatPrice } from "@/helpers/currency";
-import { useContext, useState } from "react";
-import { apiServices } from "@/services/api";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import AddToCartButton from "./AddProductButton";
-import { cartContext } from "@/contextes/CartContext";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { addToCart } from "@/redux/slices/cartSlice";
+import { addToWishlist, removeFromWishlist } from "@/redux/slices/wishlistSlice";
+import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -19,11 +23,75 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
-  const [addToCartLoading, setaddToCartLoading] = useState(false)
-  const { HandleAddProductToCart } = useContext(cartContext)
+  const [addToCartLoading, setaddToCartLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { data: session } = useSession();
 
- 
+  const isInWishlist = useAppSelector((state) =>
+    state.wishlist.productIds.includes(product._id)
+  );
+  const isWishlistMutating = useAppSelector((state) =>
+    state.wishlist.mutatingIds.includes(product._id)
+  );
 
+  async function HandleAddProductToCart(productId: string, setLoading: (v: boolean) => void) {
+    if (!session?.token) {
+      toast.error("Please sign in to add items to your cart", { position: "bottom-right" });
+      router.push("/login");
+      return;
+    }
+
+    setLoading(true);
+    const result = await dispatch(addToCart({ productId, token: session.token }));
+    setLoading(false);
+
+    if (addToCart.fulfilled.match(result) && result.payload.status === "success") {
+      toast.success(result.payload.message, { position: "bottom-right" });
+    } else {
+      toast.error("Error. Please try again.", { position: "bottom-right" });
+    }
+  }
+
+  function handleToggleWishlist() {
+    if (!session?.token) {
+      toast.error("Please sign in to use your wishlist", { position: "bottom-right" });
+      router.push("/login");
+      return;
+    }
+
+    if (isInWishlist) {
+      dispatch(removeFromWishlist({ productId: product._id, token: session.token })).then(
+        (result) => {
+          if (removeFromWishlist.fulfilled.match(result)) {
+            toast.success("Removed from wishlist", { position: "bottom-right" });
+          }
+        }
+      );
+    } else {
+      dispatch(addToWishlist({ productId: product._id, token: session.token })).then((result) => {
+        if (addToWishlist.fulfilled.match(result)) {
+          toast.success("Added to wishlist", { position: "bottom-right" });
+        }
+      });
+    }
+  }
+
+  const WishlistButton = (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleToggleWishlist}
+      disabled={isWishlistMutating}
+      className={cn(viewMode === "grid" && "absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white")}
+    >
+      {isWishlistMutating ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Heart className={cn("h-4 w-4", isInWishlist && "fill-red-500 text-red-500")} />
+      )}
+    </Button>
+  );
 
   if (viewMode === "list") {
     return (
@@ -48,9 +116,7 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
                 {product.title}
               </Link>
             </h3>
-            <Button variant="ghost" size="sm">
-              <Heart className="h-4 w-4" />
-            </Button>
+            {WishlistButton}
           </div>
 
           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
@@ -97,8 +163,15 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
               </div>
             </div>
 
-            <Button>
-              <ShoppingCart className="h-4 w-4 mr-2" />
+            <Button
+              onClick={() => HandleAddProductToCart(product._id, setaddToCartLoading)}
+              disabled={addToCartLoading}
+            >
+              {addToCartLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <ShoppingCart className="h-4 w-4 mr-2" />
+              )}
               Add to Cart
             </Button>
           </div>
@@ -109,7 +182,7 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
 
   return (
     <div className="group flex flex-col justify-between relative bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
-      
+
       <div className="">
         {/* Product Image */}
       <div className="relative aspect-square overflow-hidden">
@@ -122,13 +195,7 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
         />
 
         {/* Wishlist Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white"
-        >
-          <Heart className="h-4 w-4" />
-        </Button>
+        {WishlistButton}
 
         {/* Badge for sold items */}
         { product.sold > 100 && (
@@ -143,12 +210,12 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
         {/* Brand */}
         <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
           <Link
-            href={``} 
+            href={`/brands/${product.brand._id}`}
             className="hover:text-primary hover:underline transition-colors"
             >
               {product.brand.name}
             </Link>
-      
+
         </p>
 
         {/* Title */}
@@ -167,10 +234,10 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
         {/* Category */}
         <p className="text-xs text-muted-foreground mb-2">
           <Link
-            href={""}
+            href={`/categories/${product.category._id}`}
             className="hover:text-primary hover:underline transition-colors"
           >
-            {product.category.name} 
+            {product.category.name}
           </Link>
         </p>
 
@@ -182,14 +249,18 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
           <span className="text-xs text-muted-foreground"> {product.sold} sold</span>
         </div>
 
-      
+
       </div>
 </div>
 
 
       {/* Add to Cart Button */}
       <div className="p-4 ">
-        <AddToCartButton HandleAddProductToCart={() => HandleAddProductToCart!(product._id, setaddToCartLoading )} addToCartLoading={addToCartLoading} productQuantity={product.quantity}  />
+        <AddToCartButton
+          HandleAddProductToCart={() => HandleAddProductToCart(product._id, setaddToCartLoading)}
+          addToCartLoading={addToCartLoading}
+          productQuantity={product.quantity}
+        />
       </div>
     </div>
   );

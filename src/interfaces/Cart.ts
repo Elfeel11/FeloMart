@@ -44,3 +44,15 @@ export interface InnerCartProduct {
   ratingsAverage: number;
   id: string;
 }
+
+export interface WishlistResponse {
+  status: string;
+  count: number;
+  data: import("./product").Product[];
+}
+
+export interface AddOrRemoveWishlistResponse {
+  status: string;
+  message: string;
+  data: string[];
+}

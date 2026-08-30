@@ -1,20 +1,31 @@
 import { ProductsResponse, SingleProductResponse } from "@/types";
-import { AddToCartResponse, GetUserCartResponse } from "./../interfaces";
-
-// const baseUrl = process.env.NEXT_PUPLIC_API_BASE_URL;
+import {
+  AddToCartResponse,
+  GetUserCartResponse,
+  WishlistResponse,
+  AddOrRemoveWishlistResponse,
+  SignInResponse,
+  SignInPayload,
+  SignUpResponse,
+  SignUpPayload,
+} from "@/interfaces";
 
 class ApiServices {
   #baseUrl: string = "https://ecommerce.routemisr.com/";
-  // constructor(){
-  //     this.baseUrl = baseUrl ?? "";
-  // }
 
+  #getHeaders(token?: string) {
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { token } : {}),
+    };
+  }
+
+  // ---------- Products ----------
   async getAllProducts(): Promise<ProductsResponse> {
     return await fetch(this.#baseUrl + "api/v1/products", {
       next: {
         revalidate: 60,
       },
-      cache: "no-cache",
     }).then((res) => res.json());
   }
 
@@ -24,49 +35,97 @@ class ApiServices {
     );
   }
 
-  #getHeaders() {
-    return {
-      "Content-Type": "application/json",
-      token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhODc4YzY2ZmMzM2Q4MDAxMjQ2YmNiZiIsIm5hbWUiOiJBaG1lZCBBYmQgQWwtTXV0aSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzg3MjY4MjE4LCJleHAiOjE3OTUwNDQyMTh9.Fqzy3nno3tpGWKAySB5LmQ8WgdXfLTNma2xhDH0Vq64`,
-      // token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5MTA4ZmZjNTE0MThhZjVhOGNiMjYxNyIsIm5hbWUiOiJBaG1lZCBBYmQgQWwtTXV0aSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzYzMDc5NTUzLCJleHAiOjE3NzA4NTU1NTN9.SsM0OForvTZyaW33dc4gCx1U1jxftmgui7g6SfhEG5M`,
-    };
+  // ---------- Auth ----------
+  async signIn(payload: SignInPayload): Promise<SignInResponse> {
+    return await fetch(this.#baseUrl + "api/v1/auth/signin", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: this.#getHeaders(),
+    }).then((res) => res.json());
   }
-  async addProductToCart(productId: string): Promise<AddToCartResponse> {
+
+  async signUp(payload: SignUpPayload): Promise<SignUpResponse> {
+    return await fetch(this.#baseUrl + "api/v1/auth/signup", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: this.#getHeaders(),
+    }).then((res) => res.json());
+  }
+
+  // ---------- Cart ----------
+  async addProductToCart(
+    productId: string,
+    token: string,
+  ): Promise<AddToCartResponse> {
     return await fetch(this.#baseUrl + "api/v1/cart", {
       method: "POST",
       body: JSON.stringify({ productId }),
-      headers: this.#getHeaders(),
+      headers: this.#getHeaders(token),
     }).then((res) => res.json());
   }
 
-  async getUserCart(): Promise<GetUserCartResponse> {
+  async getUserCart(token: string): Promise<GetUserCartResponse> {
     return await fetch(this.#baseUrl + "api/v1/cart", {
-      headers: this.#getHeaders(),
+      headers: this.#getHeaders(token),
+      cache: "no-store",
     }).then((res) => res.json());
   }
 
-  async removeCartProduct(productId: string): Promise<{ status: string }> {
+  async removeCartProduct(
+    productId: string,
+    token: string,
+  ): Promise<{ status: string }> {
     return await fetch(this.#baseUrl + "api/v1/cart/" + productId, {
       method: "delete",
-      headers: this.#getHeaders(),
+      headers: this.#getHeaders(token),
     }).then((res) => res.json());
   }
 
-  async clearCart(): Promise<{ status: string }> {
+  async clearCart(token: string): Promise<{ status: string }> {
     return await fetch(this.#baseUrl + "api/v1/cart/", {
       method: "delete",
-      headers: this.#getHeaders(),
+      headers: this.#getHeaders(token),
     }).then((res) => res.json());
   }
 
   async updateCartProductQuantity(
     productId: string,
     count: number,
+    token: string,
   ): Promise<{ status: string }> {
     return await fetch(this.#baseUrl + "api/v1/cart/" + productId, {
       method: "PUT",
-      headers: this.#getHeaders(),
+      headers: this.#getHeaders(token),
       body: JSON.stringify({ count }),
+    }).then((res) => res.json());
+  }
+
+  // ---------- Wishlist ----------
+  async getWishlist(token: string): Promise<WishlistResponse> {
+    return await fetch(this.#baseUrl + "api/v1/wishlist", {
+      headers: this.#getHeaders(token),
+      cache: "no-store",
+    }).then((res) => res.json());
+  }
+
+  async addToWishlist(
+    productId: string,
+    token: string,
+  ): Promise<AddOrRemoveWishlistResponse> {
+    return await fetch(this.#baseUrl + "api/v1/wishlist", {
+      method: "POST",
+      body: JSON.stringify({ productId }),
+      headers: this.#getHeaders(token),
+    }).then((res) => res.json());
+  }
+
+  async removeFromWishlist(
+    productId: string,
+    token: string,
+  ): Promise<AddOrRemoveWishlistResponse> {
+    return await fetch(this.#baseUrl + "api/v1/wishlist/" + productId, {
+      method: "delete",
+      headers: this.#getHeaders(token),
     }).then((res) => res.json());
   }
 }

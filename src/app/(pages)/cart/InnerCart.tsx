@@ -1,64 +1,67 @@
 "use client";
 import { Button, Separator } from "@/components";
 import CartProduct from "@/components/products/CartProduct";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { formatPrice } from "@/helpers/currency";
-import {GetUserCartResponse} from "@/interfaces";
-import { apiServices } from "@/services/api";
 import { Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { cartContext } from "@/contextes/CartContext";
+import { useSession } from "next-auth/react";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+  fetchCart,
+  removeCartItem,
+  updateCartItemQuantity,
+  clearCart,
+} from "@/redux/slices/cartSlice";
 
-interface InnerCartProps {
-  cartData: GetUserCartResponse;
-}
-
-export default function InnerCart({ cartData }: InnerCartProps) {
-  const [InnerCartData, setInnerCartData] =
-    useState<GetUserCartResponse>(cartData);
-  const [IsClearingCart, setIsClearingCart] = useState(false);
-  const { setCartCount } = useContext(cartContext)
-
-
+export default function InnerCart() {
+  const { data: session, status: sessionStatus } = useSession();
+  const dispatch = useAppDispatch();
+  const { products, numOfCartItems, totalCartPrice, status } = useAppSelector(
+    (state) => state.cart
+  );
+  const [isClearingCart, setIsClearingCart] = useState(false);
 
   useEffect(() => {
-  setCartCount!(InnerCartData.numOfCartItems);
-  }, [InnerCartData]);
-  
+    if (session?.token) {
+      dispatch(fetchCart(session.token));
+    }
+  }, [session?.token, dispatch]);
 
-  async function updateCart() {
-    const newCartData = await apiServices.getUserCart();
-    setInnerCartData(newCartData);
-  }
   async function handlrRemoveCartItem(
-    ProductId: string,
-    setIsRemovingProduct: (Value: boolean) => void
+    productId: string,
+    setIsRemovingProduct: (value: boolean) => void
   ) {
+    if (!session?.token) return;
     setIsRemovingProduct(true);
-    const response = await apiServices.removeCartProduct(ProductId);
+    await dispatch(removeCartItem({ productId, token: session.token }));
     toast.success("Product removed from cart successfully", {
       position: "bottom-right",
     });
-    updateCart();
     setIsRemovingProduct(false);
   }
 
-  async function updateCartProductQuantity(productId: string, count: number) {
-    const response = await apiServices.updateCartProductQuantity(
-      productId,
-      count
-    );
-    updateCart();
+  async function handleUpdateCartProductQuantity(productId: string, count: number) {
+    if (!session?.token) return;
+    await dispatch(updateCartItemQuantity({ productId, count, token: session.token }));
   }
+
   async function handleClearCart() {
+    if (!session?.token) return;
     setIsClearingCart(true);
-    const response = await apiServices.clearCart();
-    toast.success("Cart cleared successfully", {
-      position: "bottom-right",
-    });
-    updateCart();
+    await dispatch(clearCart(session.token));
+    toast.success("Cart cleared successfully", { position: "bottom-right" });
     setIsClearingCart(false);
+  }
+
+  if (sessionStatus === "loading" || status === "loading" || status === "idle") {
+    return (
+      <div className="flex justify-center items-center min-h-[300px]">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
@@ -66,28 +69,28 @@ export default function InnerCart({ cartData }: InnerCartProps) {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Shopping Cart</h1>
-        {InnerCartData.numOfCartItems > 0 && (
+        {numOfCartItems > 0 && (
           <p className="text-muted-foreground mb-8">
             <span className="font-semibold">
-              {InnerCartData.numOfCartItems} item
-              {InnerCartData.numOfCartItems > 1 ? "s" : ""}
+              {numOfCartItems} item
+              {numOfCartItems > 1 ? "s" : ""}
             </span>{" "}
             in your cart
           </p>
         )}
       </div>
 
-      {InnerCartData.numOfCartItems > 0 ? (
+      {numOfCartItems > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* LEFT SIDE — Cart Items */}
           <div className="lg:col-span-2">
             <div className="space-y-5">
-              {InnerCartData.data.products.map((item) => (
+              {products.map((item) => (
                 <CartProduct
-                key={item._id}
+                  key={item._id}
                   handlrRemoveCartItem={handlrRemoveCartItem}
                   item={item}
-                  updateCartProductQuantity={updateCartProductQuantity}
+                  updateCartProductQuantity={handleUpdateCartProductQuantity}
                 />
               ))}
             </div>
@@ -98,10 +101,10 @@ export default function InnerCart({ cartData }: InnerCartProps) {
               onClick={() => {
                 handleClearCart();
               }}
-              disabled={IsClearingCart}
+              disabled={isClearingCart}
               variant="outline"
             >
-              {IsClearingCart ? (
+              {isClearingCart ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -116,8 +119,8 @@ export default function InnerCart({ cartData }: InnerCartProps) {
 
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span>Subtotal ({InnerCartData.numOfCartItems} items)</span>
-                <span>{formatPrice(InnerCartData.data.totalCartPrice)}</span>
+                <span>Subtotal ({numOfCartItems} items)</span>
+                <span>{formatPrice(totalCartPrice)}</span>
               </div>
 
               <div className="flex justify-between">
@@ -129,7 +132,7 @@ export default function InnerCart({ cartData }: InnerCartProps) {
 
               <div className=" pt-4 flex justify-between font-semibold text-lg">
                 <span>Total</span>
-                <span>{formatPrice(InnerCartData.data.totalCartPrice)}</span>
+                <span>{formatPrice(totalCartPrice)}</span>
               </div>
             </div>
 

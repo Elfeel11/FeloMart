@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ShoppingCart, User, Menu, X, Loader2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ShoppingCart, User, Menu, X, Loader2, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components";
 import {
   NavigationMenu,
@@ -11,13 +11,19 @@ import {
   NavigationMenuList,
 } from "@/components";
 import { cn } from "@/lib/utils";
-import React, { useContext, useState } from "react";
-import { cartContext } from "@/contextes/CartContext";
+import React, { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useAppSelector } from "@/redux/hooks";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { CartCount, IsLioadingCount } = useContext(cartContext)
+  const { data: session, status } = useSession();
+
+  const numOfCartItems = useAppSelector((state) => state.cart.numOfCartItems);
+  const cartStatus = useAppSelector((state) => state.cart.status);
+  const wishlistCount = useAppSelector((state) => state.wishlist.productIds.length);
 
   const navItems = [
     { href: "/products", label: "Products" },
@@ -67,22 +73,47 @@ export function Navbar() {
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-2">
-            {/* User Account */}
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-              <span className="sr-only">Account</span>
-            </Button>
+            {/* Wishlist */}
+            <Link href="/wishlist">
+              <Button variant="ghost" size="icon" className="relative">
+                <Heart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 aspect-square h-4 w-4 rounded-full bg-primary text-xs text-primary-foreground flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
+                <span className="sr-only">Wishlist</span>
+              </Button>
+            </Link>
 
             {/* Shopping Cart */}
            <Link href="/cart">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 aspect-square h-4 w-4 rounded-full bg-primary text-xs text-primary-foreground flex items-center justify-center">
-                {IsLioadingCount ? <Loader2 className="animate-spin"/> : CartCount}
+                {cartStatus === "loading" ? <Loader2 className="animate-spin" /> : numOfCartItems}
               </span>
               <span className="sr-only">Shopping cart</span>
             </Button>
            </Link>
+
+            {/* User Account */}
+            {status === "authenticated" ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                title={`Sign out (${session.user?.name ?? ""})`}
+              >
+                <LogOut className="h-5 w-5" />
+                <span className="sr-only">Sign out</span>
+              </Button>
+            ) : (
+              <Button variant="ghost" size="icon" onClick={() => router.push("/login")}>
+                <User className="h-5 w-5" />
+                <span className="sr-only">Sign in</span>
+              </Button>
+            )}
 
             {/* Mobile Menu */}
             <Button
